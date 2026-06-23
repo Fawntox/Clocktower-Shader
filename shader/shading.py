@@ -5,11 +5,11 @@ import helper_function as hf
 import matplotlib.colors as mcolors
 
 
-image = Image.open("input images\\input4.jpg")
+image = Image.open("shader\input images\input0.jpg")
 
 
 colour_image = np.array(image)
-Image.fromarray(cv2.convertScaleAbs(colour_image)).save("output images\\output2.png")
+Image.fromarray(cv2.convertScaleAbs(colour_image)).save("shader\\output images\\output5.png")
 
 
 print("greying...")
@@ -19,14 +19,14 @@ print("blurring...")
 
 nimage = cv2.GaussianBlur(colour_image, (9,9), 3)
 savee = nimage.astype(np.uint8)
-Image.fromarray(savee).save("output images\\blurred.png")
+Image.fromarray(savee).save("shader\\output images\\blurred.png")
 
 print("sobel edging...")
 
 crazy_sobel,direction_array = hf.image_to_good_soble_per_colour_with_direction(nimage)
 normalized_sobel = cv2.normalize(crazy_sobel, None, 0, 255, cv2.NORM_MINMAX)
 color_like2 = cv2.cvtColor(normalized_sobel.astype(np.uint8), cv2.COLOR_GRAY2RGB)
-Image.fromarray(color_like2).save("output images\\soble.png")
+Image.fromarray(color_like2).save("shader\\output images\\soble.png")
 
 
 print("double thresholding...")
@@ -35,7 +35,7 @@ dbt =  hf.adaptive_double_threshold(crazy_sobel,301,4,8,10,100)
 
 
 savee = cv2.cvtColor(dbt.astype(np.uint8), cv2.COLOR_GRAY2RGB)
-Image.fromarray(savee).save("output images\\dbt.png")
+Image.fromarray(savee).save("shader\\output images\\dbt.png")
 
 print("filling (extending lines)....")
 
@@ -43,14 +43,14 @@ filled,proxy_direction = hf.extend_lines(dbt,direction_array,15,5)
 
 
 savee = cv2.cvtColor(filled.astype(np.uint8), cv2.COLOR_GRAY2RGB)
-Image.fromarray(savee).save("output images\\filled.png")
+Image.fromarray(savee).save("shader\\output images\\filled.png")
 
 print("filling more....")
 
 full = hf.fill_in_the_blank(filled)
 
 savee = cv2.cvtColor(full.astype(np.uint8), cv2.COLOR_GRAY2RGB)
-Image.fromarray(savee).save("output images\\fuller.png")
+Image.fromarray(savee).save("shader\\output images\\fuller.png")
 
 print("finding splotches...")
 
@@ -65,8 +65,8 @@ hsv_img = np.stack([h,s,v], axis=-1)
 rgb_img = mcolors.hsv_to_rgb(hsv_img)
 output = (rgb_img * 255).astype(np.uint8)
 clipped_splotches = np.uint8(np.clip(splotches, 0, 255)) 
-Image.fromarray(clipped_splotches).save("output images\\splotches.png")
-Image.fromarray(output).save("output images\\splotchified.png")
+Image.fromarray(clipped_splotches).save("shader\\output images\\splotches.png")
+Image.fromarray(output).save("shader\\output images\\splotchified.png")
 
 
 print("mixing splotches...")
@@ -94,7 +94,7 @@ for i in range(H):
             if (info[0] > 5):
                 averaged[i,j] = info[1] / info[0]
 
-Image.fromarray(averaged).save("output images\\uniform.png")
+Image.fromarray(averaged).save("shader\\output images\\uniform.png")
 
 print("done")
 

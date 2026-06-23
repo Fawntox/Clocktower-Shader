@@ -5,7 +5,7 @@ from PIL import Image
 
 
 
-splotches = np.load("output images\splotches.npy")
+splotches = np.load("shader\\output images\splotches.npy")
 print(splotches.min(), splotches.max())
 
 h = (splotches * 0.001) % 1
@@ -16,6 +16,6 @@ hsv_img = np.stack([h,s,v], axis=-1)
 
 rgb_img = mcolors.hsv_to_rgb(hsv_img)
 output = (rgb_img * 255).astype(np.uint8)
-Image.fromarray(output).save("output images\\splotchified.png")
+Image.fromarray(output).save("shader\\output images\\splotchified.png")
 
 
