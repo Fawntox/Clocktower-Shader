@@ -314,7 +314,7 @@ def endpoints(edge_map: np.ndarray):
         kernel,
         mode="constant"
     )
-    arr_end = (edge_map > 0) & (neighbor_count == 1)
+    arr_end = (edge_map > 0) & (neighbor_count <= 1)
     return edge_map * arr_end
 
 

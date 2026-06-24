@@ -26,14 +26,17 @@ Image.fromarray(savee).save(output_path + "blurred.png")
 print("sobel edging...")
 
 crazy_sobel,direction_array = hf.image_to_good_soble_per_colour_with_direction(nimage)
-normalized_sobel = cv2.normalize(crazy_sobel, None, 0, 255, cv2.NORM_MINMAX)
-color_like2 = cv2.cvtColor(normalized_sobel.astype(np.uint8), cv2.COLOR_GRAY2RGB)
-Image.fromarray(color_like2).save(output_path + "soble.png")
 
+normalized_sobel = cv2.normalize(crazy_sobel, None, 0, 255, cv2.NORM_MINMAX)
+
+color_like2 = cv2.cvtColor(crazy_sobel.astype(np.uint8), cv2.COLOR_GRAY2RGB)
+Image.fromarray(color_like2).save(output_path + "crazy soble.png")
+color_like2 = cv2.cvtColor(normalized_sobel.astype(np.uint8), cv2.COLOR_GRAY2RGB)
+Image.fromarray(color_like2).save(output_path + "normal soble.png")
 
 print("double thresholding...")
 # dbt = hf.double_thresholding(crazy_sobel,14,40) 
-dbt =  hf.adaptive_double_threshold(crazy_sobel,301,4,8,10,100)
+dbt =  hf.adaptive_double_threshold(normalized_sobel,301,4,8,10,100)
 
 
 savee = cv2.cvtColor(dbt.astype(np.uint8), cv2.COLOR_GRAY2RGB)
@@ -41,12 +44,21 @@ Image.fromarray(savee).save(output_path + "dbt.png")
 
 print("filling (extending lines)....")
 
-endpoints =  hf.endpoints(dbt)
+
+endpoint = hf.endpoints(dbt)
+endpoint_hilight = cv2.cvtColor(
+    dbt.astype(np.uint8),
+    cv2.COLOR_GRAY2RGB
+)
+
+# Mark endpoint pixels red
+endpoint_hilight[endpoint > 0] = [255, 0, 0]
+
 
 filled = dbt
 
-savee = cv2.cvtColor(endpoints.astype(np.uint8), cv2.COLOR_GRAY2RGB)
-Image.fromarray(savee).save(output_path + "filled.png")
+#savee = cv2.cvtColor((endpoint_hilight).astype(np.uint8), cv2.COLOR_GRAY2RGB)
+Image.fromarray(endpoint_hilight).save(output_path + "filled.png")
 
 print("filling more....")
 
@@ -87,6 +99,7 @@ chosen_one[np.isin(splats, bad_labels)] = 0
 
 savee = cv2.cvtColor(chosen_one.astype(np.uint8), cv2.COLOR_GRAY2RGB)
 Image.fromarray(savee).save(output_path + "culled.png")
+
 
 
 print("finding splotches...")
