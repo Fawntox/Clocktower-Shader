@@ -8,8 +8,10 @@ import matplotlib.colors as mcolors
 image = Image.open("shader\input images\input0.jpg")
 
 
+output_path = "shader\\output_images\\"
+
 colour_image = np.array(image)
-Image.fromarray(cv2.convertScaleAbs(colour_image)).save("shader\\output images\\output5.png")
+Image.fromarray(cv2.convertScaleAbs(colour_image)).save(output_path + "output5.png")
 
 
 print("greying...")
@@ -19,14 +21,14 @@ print("blurring...")
 
 nimage = cv2.GaussianBlur(colour_image, (9,9), 3)
 savee = nimage.astype(np.uint8)
-Image.fromarray(savee).save("shader\\output images\\blurred.png")
+Image.fromarray(savee).save(output_path + "blurred.png")
 
 print("sobel edging...")
 
 crazy_sobel,direction_array = hf.image_to_good_soble_per_colour_with_direction(nimage)
 normalized_sobel = cv2.normalize(crazy_sobel, None, 0, 255, cv2.NORM_MINMAX)
 color_like2 = cv2.cvtColor(normalized_sobel.astype(np.uint8), cv2.COLOR_GRAY2RGB)
-Image.fromarray(color_like2).save("shader\\output images\\soble.png")
+Image.fromarray(color_like2).save(output_path + "soble.png")
 
 
 print("double thresholding...")
@@ -35,38 +37,73 @@ dbt =  hf.adaptive_double_threshold(crazy_sobel,301,4,8,10,100)
 
 
 savee = cv2.cvtColor(dbt.astype(np.uint8), cv2.COLOR_GRAY2RGB)
-Image.fromarray(savee).save("shader\\output images\\dbt.png")
+Image.fromarray(savee).save(output_path + "dbt.png")
 
 print("filling (extending lines)....")
 
-filled,proxy_direction = hf.extend_lines(dbt,direction_array,15,5)
+endpoints =  hf.endpoints(dbt)
 
+filled = dbt
 
-savee = cv2.cvtColor(filled.astype(np.uint8), cv2.COLOR_GRAY2RGB)
-Image.fromarray(savee).save("shader\\output images\\filled.png")
+savee = cv2.cvtColor(endpoints.astype(np.uint8), cv2.COLOR_GRAY2RGB)
+Image.fromarray(savee).save(output_path + "filled.png")
 
 print("filling more....")
 
 full = hf.fill_in_the_blank(filled)
 
 savee = cv2.cvtColor(full.astype(np.uint8), cv2.COLOR_GRAY2RGB)
-Image.fromarray(savee).save("shader\\output images\\fuller.png")
+Image.fromarray(savee).save(output_path + "fuller.png")
+
+
+
+
+#segmenting
+chosen_one = full
+
+
+print("generating splats...")
+
+splats =  hf.splat_map(chosen_one)
+
+
+print("visualising splats....")
+
+h = (splats * 0.001) % 1
+s = np.ones_like(h)*0.5
+v = np.ones_like(h)*0.5
+v[splats == 0] = 0
+hsv_img = np.stack([h,s,v], axis=-1)
+rgb_img = mcolors.hsv_to_rgb(hsv_img)
+output = (rgb_img * 255).astype(np.uint8)
+Image.fromarray(output).save(output_path + "splatified.png")
+
+print("culling splats...")
+values, counts = np.unique(splats, return_counts=True)
+bad_labels = values[counts < 100]
+
+# Set matching locations in og_array to 0
+chosen_one[np.isin(splats, bad_labels)] = 0
+
+savee = cv2.cvtColor(chosen_one.astype(np.uint8), cv2.COLOR_GRAY2RGB)
+Image.fromarray(savee).save(output_path + "culled.png")
+
 
 print("finding splotches...")
 
-splotches =  hf.splotch_map(full)
+splotches =  hf.splotch_map(chosen_one)
 
+#visualisation - not important
 h = (splotches * 0.001) % 1
 s = np.ones_like(h)*0.5
 v = np.ones_like(h)*0.5
 v[splotches == 0] = 0
 hsv_img = np.stack([h,s,v], axis=-1)
-
 rgb_img = mcolors.hsv_to_rgb(hsv_img)
 output = (rgb_img * 255).astype(np.uint8)
 clipped_splotches = np.uint8(np.clip(splotches, 0, 255)) 
-Image.fromarray(clipped_splotches).save("shader\\output images\\splotches.png")
-Image.fromarray(output).save("shader\\output images\\splotchified.png")
+Image.fromarray(clipped_splotches).save(output_path + "splotches.png")
+Image.fromarray(output).save(output_path + "splotchified.png")
 
 
 print("mixing splotches...")
@@ -94,7 +131,7 @@ for i in range(H):
             if (info[0] > 5):
                 averaged[i,j] = info[1] / info[0]
 
-Image.fromarray(averaged).save("shader\\output images\\uniform.png")
+Image.fromarray(averaged).save(output_path + "uniform.png")
 
 print("done")
 
